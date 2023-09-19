@@ -32,7 +32,7 @@
 script_name('Med Helper')
 script_description('Удобный помощник для Больницы.')
 script_author('EvilDukky')
-script_version('1.1')
+script_version('1.2')
 script_dependencies('mimgui; samp events; lfs; MoonMonet')
 
 require 'moonloader'
@@ -104,7 +104,7 @@ if not imguicheck or not sampevcheck or not encodingcheck or not lfscheck or not
 				if progressbar and progressbar.max ~= nil and progressbar.downloadinglibname and progressbar.downloaded and progressbar.downloadingtheme then
 					local jj = (200-10)/progressbar.max
 					local downloaded = progressbar.downloadedvisual * jj
-					renderDrawBoxWithBorder(x, y-39, 200, 20, 0xFFFF6633, 1, 0xFF808080)
+					renderDrawBoxWithBorder(x, y-39, 200, 20, 0xFFFF33F2, 1, 0xFF808080)
 					renderFontDrawText(MedHfont, 'Med Helper', x+ 5, y - 37, 0xFFFFFFFF)
 					renderDrawBoxWithBorder(x, y-20, 200, 70, 0xFF1C1C1C, 1, 0xFF808080)
 					renderFontDrawText(progressfont, string.format('Скачивание: %s', progressbar.downloadingtheme), x + 5, y - 15, 0xFFFFFFFF)
@@ -117,7 +117,7 @@ if not imguicheck or not sampevcheck or not encodingcheck or not lfscheck or not
 			end
 		end)
 
-		sampAddChatMessage(('[MedHelper]{EBEBEB} Началось скачивание необходимых файлов. Если скачивание не удастся, то обратитесь к {ff6633}vk.com/evil.duckky{ebebeb}.'),0xff6633)
+		sampAddChatMessage(('[MedHelper]{EBEBEB} Началось скачивание необходимых файлов. Если скачивание не удастся, то обратитесь к {FF33F2}vk.com/evil.duckky{ebebeb}.'),0xFF33F2)
 
 		if not imguicheck then -- Нашел только релизную версию в архиве, так что пришлось залить файлы сюда, при обновлении буду обновлять и у себя
 			print('{FFFF00}Скачивание: mimgui')
@@ -242,6 +242,7 @@ local configuration = inicfg.load({
 		str14 = 800000,
 		str21 = 1200000,
 		tatu = 50000,
+		osm = 1000000,
 		RChatColor = 4282626093,
 		DChatColor = 4294940723,
 		ASChatColor = 4281558783,
@@ -275,7 +276,7 @@ local configuration = inicfg.load({
     	posX = 200,
     	posY = 400,
 
-    	col_title = 0xFFFF6633,
+    	col_title = 0xFFFF33F2,
     	col_default = 0xFFFFFFFF,
     	col_no_work = 0xFFAA3333,
     	col_afk_max = 0xFFFF0000,
@@ -513,6 +514,7 @@ local getmyrank						= false
 local windowtype						= new.int(0)
 local sobesetap						= new.int(0)
 local medtap						= new.int(0)
+local osmtap						= new.int(0)
 local rectap						= new.int(0)
 local narkotap						= new.int(0)
 local koronatap						= new.int(0)
@@ -626,6 +628,7 @@ local pricelist = {
 	str14							= new.char[8](tostring(configuration.main_settings.str14)),
 	str21							= new.char[8](tostring(configuration.main_settings.str21)),
 	tatu							= new.char[7](tostring(configuration.main_settings.tatu)),
+	osm								= new.char[8](tostring(configuration.main_settings.osm)),
 	antibio							= new.char[7](tostring(configuration.main_settings.antibio)),
 }
 local tHotKeyData = {
@@ -674,7 +677,7 @@ local tagbuttons = {
 	{name = '{HM}',text = 'Пишет системное время в часы:минуты.',hint = 'Сегодня в {HM} будет концерт!\n- Сегодня в чч:мм будет концерт!'},
 	{name = '{HMS}',text = 'Пишет системное время в часы:минуты:секунды.',hint = 'У меня на часах {HMS}\n- У меня на часах \'чч:мм:сс\''},
 	{name = '{gender:Текст1|Текст2}',text = 'Пишет сообщение в зависимости от вашего пола.',hint = 'Я вчера {gender:был|была} в банке\n- Если мужской пол: был в банке\n- Если женский пол: была в банке'},
-	{name = '{location:Текст1|Текст2|Текст3}',text = 'Пишет сообщение в зависимости от вашей больницы.',hint = 'Я в больнице {ЛС|СФ|ЛВ}\n- Если больница ЛС: Я в больнице ЛС\n- Если больница СФ: Я в больнице СФ\n- Если больница ЛВ: Я в больнице ЛВ'},
+	{name = '{location:Текст1|Текст2|Текст3|Текст4}',text = 'Пишет сообщение в зависимости от вашей больницы.',hint = 'Я в больнице {ЛС|СФ|ЛВ|ДФ}\n- Если больница ЛС: Я в больнице ЛС\n- Если больница СФ: Я в больнице СФ\n- Если больница ЛВ: Я в больнице ЛВ\n- Если больница ДФ: Я в больнице ДФ'},
 	{name = '@{ID}',text = 'Узнаёт имя игрока по ID.',hint = 'Ты не видел где сейчас @{43}?\n- Ты не видел где сейчас \'Имя 43 ида\''},
 	{name = '{close_id}',text = 'Узнаёт ID ближайшего к Вам игрока',hint = 'О, а вот и @{{close_id}}?\nО, а вот и \'Имя ближайшего ида\''},
 	{name = '{delay_*}',text = 'Добавляет задержку между сообщениями',hint = 'Добрый день, я сотрудник данной больницы, чем могу Вам помочь?\n{delay_2000}\n/do На груди висит бейджик с надписью работник больницы.\n\n[10:54:29] Добрый день, я сотрудник данной больницы, чем могу Вам помочь?\n[10:54:31] На груди висит бейджик с надписью работник больницы.'},
@@ -687,13 +690,13 @@ local buttons = {
 local fmbuttons = {
 	{name = u8'Лечение', rank = 1},
 	{name = u8'Мед.карта', rank = 2},
+	{name = u8'Мед.осмотр', rank = 2},
 	{name = u8'Рецепт', rank = 3},
 	{name = u8'Наркозависимость', rank = 3},
-	{name = u8'Вакцина от Коронавируса', rank = 4},
 	{name = u8'Страховка', rank = 6},
-	{name = u8'Выведение тату', rank = 7},
-	{name = u8'Осмотр', rank = 4},
-	{name = u8'Психологический осмотр', rank = 4},
+	{name = u8'Выведение тату', rank = 3},
+	{name = u8'Осмотр', rank = 3},
+	{name = u8'Психологический осмотр', rank = 3},
 	{name = u8'Собеседование', rank = 5},
 	{name = u8'Проверка устава', rank = 5},
 	{name = u8'Лидерские действия', rank = 9},
@@ -1707,22 +1710,22 @@ local imgui_fm = imgui.OnFrame(
 										sampSendChat('/stats')
 										if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
 											sendchatarray(configuration.main_settings.playcd, {
-												{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+												{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 												{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 											})
 										elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
 											sendchatarray(configuration.main_settings.playcd, {
-												{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+												{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 												{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 											})
 										elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
 											sendchatarray(configuration.main_settings.playcd, {
-												{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+												{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 												{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 											})
 										elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
 											sendchatarray(configuration.main_settings.playcd, {
-												{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+												{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 												{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 											})
 										end
@@ -1730,6 +1733,17 @@ local imgui_fm = imgui.OnFrame(
 								else
 									imgui.LockedButton(fa.ICON_FA_HAND_PAPER..u8' Поприветствовать игрока', imgui.ImVec2(285,30))
 									imgui.Hint('firstranghello', 'С 1-го ранга')
+								end
+								if configuration.main_settings.myrankint >= 1  then
+									if imgui.Button(fa.ICON_FA_FILE_ALT..u8' Что болит?', imgui.ImVec2(285,30)) then
+										sendchatarray(configuration.main_settings.playcd, {
+											{'Что у Вас болит?'},
+											{'/n Укажите РП причину.'},
+										})
+									end
+								else
+									imgui.LockedButton(fa.ICON_FA_FILE_ALT..u8' Вылечить игрока', imgui.ImVec2(285,30))
+									imgui.Hint('firstrangpricelist', 'С 1-го ранга')
 								end
 								if configuration.main_settings.myrankint >= 1  then
 									if imgui.Button(fa.ICON_FA_FILE_ALT..u8' Вылечить игрока', imgui.ImVec2(285,30)) then
@@ -1785,7 +1799,7 @@ local imgui_fm = imgui.OnFrame(
 									imgui.LockedButton(fa.ICON_FA_FILE_ALT..u8' Выдать антибиотик', imgui.ImVec2(285,30))
 									imgui.Hint('firstrangpricelist', 'С 4-го ранга')
 								end
-								if configuration.main_settings.myrankint >= 5  then
+								if configuration.main_settings.myrankint >= 4  then
 									if imgui.Button(fa.ICON_FA_FILE_ALT..u8' Реанимация', imgui.ImVec2(285,30)) then
 										sendchatarray(configuration.main_settings.playcd, {
 											{'/todo Что-то ему вообще не хорошо*снимая медицинскую сумку с плеча'},
@@ -1817,7 +1831,7 @@ local imgui_fm = imgui.OnFrame(
 											if not sampIsPlayerPaused(fastmenuID) then
 												windows.imgui_fm[0] = false
 												sendchatarray(configuration.main_settings.playcd, {
-													{'/me {gender:схватил|схватила} человека за руку, и {gender:повел|повела} к выходу'},
+													{'/me {gender:схватил|схватила} человека за руку и {gender:повел|повела} к выходу'},
 													{'/me открыв дверь рукой, {gender:вывел|вывела} человека на улицу'},
 													{'/expel %s %s', fastmenuID, configuration.main_settings.expelreason},
 												})
@@ -1847,22 +1861,22 @@ local imgui_fm = imgui.OnFrame(
 								sampSendChat('/stats')
 								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								end
@@ -1897,7 +1911,7 @@ local imgui_fm = imgui.OnFrame(
 								if imgui.Button(u8'Продолжить '..fa.ICON_FA_ARROW_RIGHT, imgui.ImVec2(285,30)) then
 									if not inprocess then
 										sendchatarray(configuration.main_settings.playcd, {
-											{'/todo Благадорю вас!*взяв паспорт в руки и {gender:начал|начала} его изучать'},
+											{'/todo Благодорю вас!*взяв паспорт в руки и {gender:начал|начала} его изучать'},
 											{'Для оформления карты необходимо заплатить гос.пошлину, которая зависит от срока карты.'},
 											{'На 7 дней - %s$, На 14 дней - %s$.',string.separate(configuration.main_settings.medcard74),string.separate(configuration.main_settings.medcard14)},
 											{'На 30 дней - %s$, На 60 дней - %s$.',string.separate(configuration.main_settings.medcard30),string.separate(configuration.main_settings.medcard60)},
@@ -1916,7 +1930,7 @@ local imgui_fm = imgui.OnFrame(
 								if imgui.Button(u8'Продолжить '..fa.ICON_FA_ARROW_RIGHT, imgui.ImVec2(285,30)) then
 									if not inprocess then
 										sendchatarray(configuration.main_settings.playcd, {
-											{'/todo Благадорю вас!*взяв паспорт в руки и {gender:начал|начала} его изучать'},
+											{'/todo Благодорю вас!*взяв паспорт в руки и {gender:начал|начала} его изучать'},
 											{'Для оформления карты необходимо заплатить гос.пошлину, которая зависит от срока карты.'},
 											{'На 7 дней - %s$, На 14 дней - %s$.',string.separate(configuration.main_settings.medcard7),string.separate(configuration.main_settings.medcard14)},
 											{'На 30 дней - %s$, На 60 дней - %s$.',string.separate(configuration.main_settings.medcard30),string.separate(configuration.main_settings.medcard60)},
@@ -2381,6 +2395,164 @@ local imgui_fm = imgui.OnFrame(
 
 					elseif newwindowtype[0] == 3 then
 						imgui.SetCursorPos(imgui.ImVec2(15,20))
+						if osmtap[0] == 0 then
+							imgui.TextColoredRGB('Мед.Осмотр: Приветствие',1)
+							imgui.Separator()
+							medtimeid = 0
+							imgui.SetCursorPosX(7.5)
+							if imgui.Button(fa.ICON_FA_HAND_PAPER..u8' Поприветствовать игрока', imgui.ImVec2(285,30)) then
+								getmyrank = true
+								sampSendChat('/stats')
+								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
+									sendchatarray(configuration.main_settings.playcd, {
+										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
+										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
+									})
+								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
+									sendchatarray(configuration.main_settings.playcd, {
+										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
+										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
+									})
+								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
+									sendchatarray(configuration.main_settings.playcd, {
+										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
+										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
+									})
+								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
+									sendchatarray(configuration.main_settings.playcd, {
+										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
+										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
+									})
+								end
+							end
+							imgui.SetCursorPosX(7.5)
+							imgui.Button(u8'Провести в операционную '..fa.ICON_FA_ARROW_RIGHT, imgui.ImVec2(285,30))
+							if imgui.IsItemHovered() then
+								if imgui.IsMouseReleased(0) then
+									if not inprocess then
+										local result, mid = sampGetPlayerIdByCharHandle(playerPed)
+										sendchatarray(configuration.main_settings.playcd, {
+											{'Стоимость мед.остатра - %s$.', string.separate(configuration.main_settings.osm)},
+											{'Если вы согласны, тогда пройдемте в операционную.'},
+										})
+										osmtap[0] = 1
+									else
+										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
+									end
+								end
+							end
+						end
+					
+						if osmtap[0] == 1 then
+							imgui.TextColoredRGB('Проведение мед.осмотра',1)
+							imgui.Separator()
+							imgui.SetCursorPosX(7.5)
+							imgui.Button(u8'Спросить мед.карту', imgui.ImVec2(285,30))
+							if imgui.IsItemHovered() then
+								if imgui.IsMouseReleased(0) then
+									if not inprocess then
+										sendchatarray(configuration.main_settings.playcd, {
+											{'Пожалуйста, предоставьте Вашу мед.карту'},
+										})
+									else
+										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
+									end
+								end
+							end
+							imgui.SetCursorPosX(7.5)
+							imgui.Button(u8'Вопросы о здоровье', imgui.ImVec2(285,30))
+							if imgui.IsItemHovered() then
+								if imgui.IsMouseReleased(0) then
+									if not inprocess then
+										sendchatarray(configuration.main_settings.playcd, {
+											{'/me {gender:взял|взяла} мед.карту из рук человека напротив'},
+											{'/do Мед.карта в руках.'},
+											{'/me {gender:достал|достала} ручку из нагрудного кармана, приготовившись к заполнению'},
+											{'Итак, сейчас я задам некоторые вопросы для оценки состояния здоровья.'},
+											{'Давно ли Вы болели? Если да, то какими болезнями.'},
+										})
+									else
+										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
+									end
+								end
+							end
+							imgui.SetCursorPosX(7.5)
+							imgui.Button(u8'Были ли травмы?', imgui.ImVec2(285,30))
+							if imgui.IsItemHovered() then
+								if imgui.IsMouseReleased(0) then
+									if not inprocess then
+										sendchatarray(configuration.main_settings.playcd, {
+											{'Были ли у Вас травмы?'},
+										})
+									else
+										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
+									end
+								end
+							end
+							imgui.SetCursorPosX(7.5)
+							imgui.Button(u8'Аллергические реакции', imgui.ImVec2(285,30))
+							if imgui.IsItemHovered() then
+								if imgui.IsMouseReleased(0) then
+									if not inprocess then
+										sendchatarray(configuration.main_settings.playcd, {
+											{'Имеются ли какие-то аллергические реакции?'},
+										})
+									else
+										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
+									end
+								end
+							end
+							imgui.SetCursorPosX(7.5)
+							imgui.Button(u8'Визуальный осмотр', imgui.ImVec2(285,30))
+							if imgui.IsItemHovered() then
+								if imgui.IsMouseReleased(0) then
+									if not inprocess then
+										sendchatarray(configuration.main_settings.playcd, {
+											{'/medcheck %s %s', fastmenuID, configuration.main_settings.osm},
+											{'/me {gender:сделал|сделала} записи в мед. карте'},
+											{'/do В кармане фонарик.'},
+											{'/me {gender:достал|достала} фонарик из кармана и включил его'},
+											{'/me {gender:проверил|проверила} реакция зрачков пациента на свет, посветив в глаза'},
+											{'/do Зрачоки глаз обследуемого сузились.'},
+											{'/me {gender:выключил|выключила} фонарик и {gender:убрал|убрала} его в карман'},
+											{'/me {gender:сделал|сделала} записи в мед. карте'},
+											{'/me {gender:вернул|вернула} мед.карту человеку напротив'},
+											{'Спасибо, можете быть свободны'},
+										})
+									else
+										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
+									end
+								end
+							end
+						end
+					
+					
+						imgui.SetCursorPos(imgui.ImVec2(15,240))
+						if osmtap[0] ~= 0 then
+							if imgui.InvisibleButton('##medbackbutton',imgui.ImVec2(55,15)) then
+								if osmtap[0] ~= 0 then osmtap[0] = osmtap[0] - 1
+								end
+							end
+							imgui.SetCursorPos(imgui.ImVec2(15,240))
+							imgui.PushFont(font[16])
+							imgui.TextColored(imgui.IsItemHovered() and imgui.GetStyle().Colors[imgui.Col.Text] or imgui.GetStyle().Colors[imgui.Col.TextDisabled], fa.ICON_FA_CHEVRON_LEFT..u8' Назад')
+							imgui.PopFont()
+							imgui.SameLine()
+						end
+						imgui.SetCursorPosY(240)
+						if osmtap[0] ~= 1 then
+							imgui.SetCursorPosX(195)
+							if imgui.InvisibleButton('##medforwardbutton',imgui.ImVec2(125,15)) then
+								osmtap[0] = osmtap[0] + 1
+							end
+							imgui.SetCursorPos(imgui.ImVec2(195, 240))
+							imgui.PushFont(font[16])
+							imgui.TextColored(imgui.IsItemHovered() and imgui.GetStyle().Colors[imgui.Col.Text] or imgui.GetStyle().Colors[imgui.Col.TextDisabled], u8'Пропустить '..fa.ICON_FA_CHEVRON_RIGHT)
+							imgui.PopFont()
+						end
+						
+						elseif newwindowtype[0] == 4 then
+						imgui.SetCursorPos(imgui.ImVec2(15,20))
 						if rectap[0] == 0 then
 							imgui.TextColoredRGB('Рецепт: Приветствие',1)
 							imgui.Separator()
@@ -2391,22 +2563,22 @@ local imgui_fm = imgui.OnFrame(
 								sampSendChat('/stats')
 								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								end
@@ -2562,7 +2734,7 @@ local imgui_fm = imgui.OnFrame(
 							imgui.PopFont()
 						end
 
-					elseif newwindowtype[0] == 4 then
+					elseif newwindowtype[0] == 5 then
 						imgui.SetCursorPos(imgui.ImVec2(15,20))
 						if narkotap[0] == 0 then
 							imgui.TextColoredRGB('Наркозависимость: Приветствие',1)
@@ -2574,22 +2746,22 @@ local imgui_fm = imgui.OnFrame(
 								sampSendChat('/stats')
 								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый вечер.Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый вечер.Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								end
@@ -2678,159 +2850,6 @@ local imgui_fm = imgui.OnFrame(
 							imgui.PopFont()
 						end
 
-					elseif newwindowtype[0] == 5 then
-						imgui.SetCursorPos(imgui.ImVec2(15,20))
-						if koronatap[0] == 0 then
-							imgui.TextColoredRGB('Вакцина от Коронавируса: Приветствие',1)
-							imgui.Separator()
-							imgui.SetCursorPosX(7.5)
-							if imgui.Button(fa.ICON_FA_HAND_PAPER..u8' Поприветствовать игрока', imgui.ImVec2(285,30)) then
-								getmyrank = true
-								sampSendChat('/stats')
-								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
-									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
-										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
-									})
-								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
-									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
-										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
-									})
-								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
-									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
-										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
-									})
-								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
-									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
-										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
-									})
-								end
-							end
-							imgui.SetCursorPosX(7.5)
-							imgui.Button(u8'Попросить документы ', imgui.ImVec2(285,30))
-							if imgui.IsItemHovered() then
-								if imgui.IsMouseReleased(0) then
-									if not inprocess then
-										local result, mid = sampGetPlayerIdByCharHandle(playerPed)
-										sendchatarray(configuration.main_settings.playcd, {
-											{'Я так вижу, вы хотите сделать вакцинацию от коронавируса. Это хорошо.'},
-											{'Предоставьте пожалуйста мед. карту.'},
-											{'/b /showmc %s', mid},
-										})
-									else
-										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
-									end
-								end
-							end
-							imgui.SetCursorPosX(7.5)
-							x = (configuration.main_settings.korona or 150000)/2
-							imgui.Button(u8'Продолжить '..fa.ICON_FA_ARROW_RIGHT, imgui.ImVec2(285,30))
-							if imgui.IsItemHovered() then
-								if imgui.IsMouseReleased(0) then
-									if not inprocess then
-										sendchatarray(configuration.main_settings.playcd, {
-											{'/me рассматривает мед. карту пациента'},
-											{'/todo Хорошо, спасибо, держите*возвращая мед. карту обратно пациенту'},
-											{'Перед вакцинацией я {gender:должен|должна} вас уведомить о ценовой политике данной процедуры.'},
-											{'Стоимость вакцинации в сумме составляет - %s$.',string.separate(configuration.main_settings.korona)},
-											{'/b Первая и вторая вакцина стоят по %s$.',string.separate(x)},
-											{'Если вы согласны, то давайте продолжим в операционной.'},
-										})
-										koronatap[0] = 1
-									else
-										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
-									end
-								end
-							end
-						end
-					
-						if koronatap[0] == 1 then
-							imgui.TextColoredRGB('Вакцина от Коронавируса: Укол',1)
-							imgui.Separator()
-							imgui.SetCursorPosX(7.5)
-							imgui.Button(u8'Первый укол', imgui.ImVec2(285,30))
-							if imgui.IsItemHovered() then
-								if imgui.IsMouseReleased(0) then
-									if not inprocess then
-										sendchatarray(configuration.main_settings.playcd, {
-											{'Хорошо, давайте приступим.'},
-											{'/do В сумке лежит 2 шприца с вакциной, спирт и пачка ватных дисков.'},
-											{'/me {gender:открыл|открыла} сумку и {gender:достал|достала} от туда спирт с ватным диском'},
-											{'/me {gender:смочил|смочила} спиртом ватный диск и {gender:положил|положила} спирт обратно в сумку'},
-											{'/todo Не бойтесь, будет не больно*натирая ватным диском левую руку пациента'},
-											{'/me {gender:положил|положила} ватный диск на стол и {gender:достал|достала} из сумки шприц с вакциной'},
-											{'/me {gender:ткнул|ткнула} шприц в место где было натёрто спиртом и надавливает поршень в шприце'},
-											{'/do В шприце закончилась вакцина.'},
-											{'/do Первый этап вакцинации прошёл успешно.'},
-											{'Возьмите этот же ватный диск и держите на месте укола...'},
-											{'...пока не пройдёт кровь.'},
-											{'Однако, через 2 минуты нужно сделать ещё один укол. Иначе вакцина не подействует.'},
-											{'Это будет последний укол, я обещаю.'},
-											{'/me улыбается'},
-											{'/vaccine %s', fastmenuID},
-										})
-									else
-										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
-									end
-								end
-							end
-							imgui.SetCursorPosX(7.5)
-							imgui.Button(u8'Второй укол', imgui.ImVec2(285,30))
-							if imgui.IsItemHovered() then
-								if imgui.IsMouseReleased(0) then
-									if not inprocess then
-										sendchatarray(configuration.main_settings.playcd, {
-											{'Я надеюсь, вы готовы?'},
-											{'/do Сумка открыта.'},
-											{'/me {gender:достал|достала} из сумки спирт с ватным диском'},
-											{'/me {gender:смочил|смочила} спиртом ватный диск и {gender:положил|положила} спирт обратно в сумку'},
-											{'/me {gender:натёр|натёрла} ватным диском левую руку пациента'},
-											{'/me {gender:достал|достала} из сумки второй шприц с вакциной'},
-											{'/me {gender:ткнул|ткнула} шприц в место, рядом с местом прошлой вакцинацией'},
-											{'/me надавливает на поршень шприца'},
-											{'/do В шприце закончилась вакцина.'},
-											{'/do Второй этап вакцинации прошёл успешно.'},
-											{'Всё также, возьмите этот же ватный диск и держите на месте укола...'},
-											{'...пока не пройдёт кровь.'},
-											{'Вакцинация прошла полностью успешно!'},
-											{'Теперь вы будете здоровы, как минимум не заразитесь коронавирусом.'},
-											{'/me улыбается'},
-											{'/vaccine %s', fastmenuID},
-											{'Удачи вам!'},
-										})
-									else
-										MedHelperMessage('Не торопитесь, Вы уже отыгрываете что-то! Прервать отыгровку: {MC}page down{WC}')
-									end
-								end
-							end
-						end
-					
-						imgui.SetCursorPos(imgui.ImVec2(15,240))
-						if koronatap[0] ~= 0 then
-							if imgui.InvisibleButton('##medbackbutton',imgui.ImVec2(55,15)) then
-								if koronatap[0] ~= 0 then koronatap[0] = koronatap[0] - 1
-								end
-							end
-							imgui.SetCursorPos(imgui.ImVec2(15,240))
-							imgui.PushFont(font[16])
-							imgui.TextColored(imgui.IsItemHovered() and imgui.GetStyle().Colors[imgui.Col.Text] or imgui.GetStyle().Colors[imgui.Col.TextDisabled], fa.ICON_FA_CHEVRON_LEFT..u8' Назад')
-							imgui.PopFont()
-							imgui.SameLine()
-						end
-						imgui.SetCursorPosY(240)
-						if koronatap[0] ~= 1 then
-							imgui.SetCursorPosX(195)
-							if imgui.InvisibleButton('##medforwardbutton',imgui.ImVec2(125,15)) then
-								koronatap[0] = koronatap[0] + 1
-							end
-							imgui.SetCursorPos(imgui.ImVec2(195, 240))
-							imgui.PushFont(font[16])
-							imgui.TextColored(imgui.IsItemHovered() and imgui.GetStyle().Colors[imgui.Col.Text] or imgui.GetStyle().Colors[imgui.Col.TextDisabled], u8'Пропустить '..fa.ICON_FA_CHEVRON_RIGHT)
-							imgui.PopFont()
-						end
 
 					elseif newwindowtype[0] == 6 then
 						imgui.SetCursorPos(imgui.ImVec2(15,20))
@@ -2843,22 +2862,22 @@ local imgui_fm = imgui.OnFrame(
 								sampSendChat('/stats')
 								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								end
@@ -2968,7 +2987,7 @@ local imgui_fm = imgui.OnFrame(
 									if not inprocess then
 										sendchatarray(configuration.main_settings.playcd, {
 											{'/me {gender:повернул|повернула} бланк в свою сторону, {gender:взял|взяла} ручку в руки и {gender:поставил|поставила} свою подпись'},
-											{'/me {gender:взял|взяла} штамп в руки и {gender:поставил|поставила} штамп %s', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+											{'/me {gender:взял|взяла} штамп в руки и {gender:поставил|поставила} штамп %s', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 											{'/todo Вот Ваша страховка*передав документ и паспорт человеку напротив'},
 											{'/givemedinsurance %s', fastmenuID},
 										})
@@ -3014,22 +3033,22 @@ local imgui_fm = imgui.OnFrame(
 								sampSendChat('/stats')
 								if tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 4 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 13 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброе утро. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 12 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 17 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый день. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) > 16 and tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 24 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Добрый вечер. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								elseif tonumber(os.date('%H', os.time(os.date('!*t')) + 2 * 60 * 60)) < 5 then
 									sendchatarray(configuration.main_settings.playcd, {
-										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'Доброй ночи. Я, %s, {gender:сотрудник|сотрудница} %s, что Вас беспокоит?', #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname), configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 									})
 								end
@@ -3071,7 +3090,7 @@ local imgui_fm = imgui.OnFrame(
 						end
 					
 						if tatutap[0] == 1 then
-							imgui.TextColoredRGB('Вакцина от Коронавируса: Выведение',1)
+							imgui.TextColoredRGB('Удаление тату: Выведение',1)
 							imgui.Separator()
 							imgui.SetCursorPosX(7.5)
 							imgui.Button(u8'Покажите туту..', imgui.ImVec2(285,30))
@@ -3496,7 +3515,7 @@ local imgui_fm = imgui.OnFrame(
 							imgui.SetCursorPosX(7.5)
 							if imgui.Button(u8'Поприветствовать', imgui.ImVec2(285,30)) then
 								sendchatarray(configuration.main_settings.playcd, {
-									{'Здравствуйте, я %s %s, Вы пришли на собеседование?', configuration.RankNames[configuration.main_settings.myrankint], configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+									{'Здравствуйте, я %s %s, Вы пришли на собеседование?', configuration.RankNames[configuration.main_settings.myrankint], configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 									{'/do На груди висит бейджик с надписью %s %s.', configuration.RankNames[configuration.main_settings.myrankint], #configuration.main_settings.myname < 1 and gsub(sampGetPlayerNickname(select(2,sampGetPlayerIdByCharHandle(playerPed))), '_', ' ') or u8:decode(configuration.main_settings.myname)},
 								})
 							end
@@ -3660,7 +3679,7 @@ local imgui_fm = imgui.OnFrame(
 							imgui.PushItemWidth(270)
 							imgui.SetCursorPosX(15)
 							imgui.PushStyleVarVec2(imgui.StyleVar.WindowPadding,imgui.ImVec2(10,10))
-							imgui.Combo('##declinesobeschoosereasonselect',sobesdecline_select, new['const char*'][5]({u8'Плохое РП',u8'Не было РП',u8'Плохая грамматика',u8'Ничего не показал',u8'Другое'}), 5)
+							imgui.Combo('##declinesobeschoosereasonselect',sobesdecline_select, new['const char*'][6]({u8'Плохое РП',u8'Не было РП',u8'Плохая грамматика',u8'Ничего не показал',u8'Опечатка в паспорте',u8'Другое'}), 6)
 							imgui.PopStyleVar()
 							imgui.PopItemWidth()
 							imgui.SetCursorPosX((imgui.GetWindowWidth() - 270) * 0.5)
@@ -3670,17 +3689,20 @@ local imgui_fm = imgui.OnFrame(
 								if not inprocess then
 									if sobesdecline_select[0] == 0 then
 										sampSendChat('К сожалению я не могу принять Вас из-за того, что Вы проф. непригодны.')
-										sampSendChat('/b Очень плохое РП')
+										sampSendChat('/b Очень плохое РП.')
 									elseif sobesdecline_select[0] == 1 then
 										sampSendChat('К сожалению я не могу принять Вас из-за того, что Вы проф. непригодны.')
-										sampSendChat('/b Не было РП')
+										sampSendChat('/b Не было РП.')
 									elseif sobesdecline_select[0] == 2 then
 										sampSendChat('К сожалению я не могу принять Вас из-за того, что Вы проф. непригодны.')
-										sampSendChat('/b Плохая грамматика')
+										sampSendChat('/b Плохая грамматика.')
 									elseif sobesdecline_select[0] == 3 then
 										sampSendChat('К сожалению я не могу принять Вас из-за того, что Вы проф. непригодны.')
-										sampSendChat('/b Ничего не показал')
+										sampSendChat('/b Ничего не показал.')
 									elseif sobesdecline_select[0] == 4 then
+										sampSendChat('К сожалению я не могу принять Вас из-за опечатки в паспорте.')
+										sampSendChat('/b НонРП ник.')
+									elseif sobesdecline_select[0] == 5 then
 										sampSendChat('К сожалению я не могу принять Вас из-за того, что Вы проф. непригодны.')
 									end
 									windows.imgui_fm[0] = false
@@ -4018,7 +4040,7 @@ local imgui_fm = imgui.OnFrame(
 									sendchatarray(configuration.main_settings.playcd, {
 										{'/me {gender:достал|достала} планшет из кармана'},
 										{'/me {gender:включил|включила} планшет'},
-										{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+										{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 										{'/me {gender:выбрал|выбрала} нужного сотрудника'},
 										{'/me {gender:выбрал|выбрала} пункт \'Включить рацию сотрудника\''},
 										{'/me {gender:нажал|нажала} на кнопку \'Сохранить изменения\''},
@@ -4224,7 +4246,7 @@ local imgui_fm = imgui.OnFrame(
 											sendchatarray(configuration.main_settings.playcd, {
 												{'/me {gender:достал|достала} планшет из кармана'},
 												{'/me {gender:включил|включила} планшет'},
-												{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+												{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 												{'/me {gender:выбрал|выбрала} нужного сотрудника'},
 												{'/me {gender:выбрал|выбрала} пункт \'Отключить рацию сотрудника\''},
 												{'/me {gender:нажал|нажала} на кнопку \'Сохранить изменения\''},
@@ -4283,6 +4305,7 @@ local imgui_fm = imgui.OnFrame(
 									if newwindowtype[0] ~= k then
 										newwindowtype[0] = k
 										medtap[0] = 0
+										osmtap[0] = 0
 										rectap[0] = 0
 										narkotap[0] = 0
 										koronatap[0] = 0
@@ -4368,6 +4391,8 @@ local imgui_settings = imgui.OnFrame(
 						imgui.TextColoredRGB('/fmute [id] [время] [причина] | /funmute [id] - Выдача/Удаление мута человеку во фракции (9+)')
 						imgui.TextColoredRGB('/giverank [id] [ранг] - Изменение ранга человека в фракции (9+)')
 						imgui.TextColoredRGB('/expel [id] [причина] - Выгнать человека из больницы (3+)')
+						imgui.TextColoredRGB('/heal [id] [цена] - Вылечить человека (1+)')
+						imgui.TextColoredRGB('/cure [id] - Реанимировать человека (1+)')
 					imgui.EndGroup()
 					imgui.Spacing()
 					imgui.TextColoredRGB('Горячие клавиши:')
@@ -4523,7 +4548,7 @@ local imgui_settings = imgui.OnFrame(
 										imgui.PopStyleVar()
 									
 										imgui.PushStyleVarVec2(imgui.StyleVar.WindowPadding,imgui.ImVec2(10,10))
-										if imgui.Combo(u8'##chooselocationcombo',usersettings.location, new['const char*'][3]({u8'Больница ЛС',u8'Больница СФ',u8'Больница ЛВ'}), 3) then
+										if imgui.Combo(u8'##chooselocationcombo',usersettings.location, new['const char*'][4]({u8'Больница ЛС',u8'Больница СФ',u8'Больница ЛВ',u8'Больница ДФ'}), 4) then
 											configuration.main_settings.location = usersettings.location[0]
 											inicfg.save(configuration,'Med Helper')
 										end
@@ -4862,6 +4887,10 @@ local imgui_settings = imgui.OnFrame(
 								end
 								if imgui.InputText(u8'Тату', pricelist.tatu, sizeof(pricelist.tatu), imgui.InputTextFlags.CharsDecimal) then
 									configuration.main_settings.tatu = str(pricelist.tatu)
+									inicfg.save(configuration,'Med Helper')
+								end
+								if imgui.InputText(u8'Мед.Осмотр', pricelist.osm, sizeof(pricelist.osm), imgui.InputTextFlags.CharsDecimal) then
+									configuration.main_settings.osm = str(pricelist.osm)
 									inicfg.save(configuration,'Med Helper')
 								end
 							imgui.EndGroup()
@@ -5450,7 +5479,7 @@ local imgui_settings = imgui.OnFrame(
 						imgui.PushFont(font[16])
 						imgui.SetCursorPosX(20)
 						imgui.BeginGroup()
-							if updateinfo.version and updateinfo.version ~= thisScript().version then
+							if updateinfo.version and updateinfo.version > thisScript().version then
 								imgui.SetCursorPosY(20)
 								imgui.TextColored(imgui.ImVec4(0.92, 0.71, 0.25, 1), fa.ICON_FA_EXCLAMATION_CIRCLE)
 								imgui.SameLine()
@@ -6044,6 +6073,9 @@ local imgui_depart = imgui.OnFrame(
 			end
 			imgui.TextColoredRGB('Тэг с кем связываетесь {FF2525}*',1)
 			imgui.InputTextWithHint('##toorgnamedep',u8(''),departsettings.toorgname, sizeof(departsettings.toorgname))
+			imgui.Separator()
+			imgui.TextColoredRGB('Частота (не Обязательно)',1)
+			imgui.InputTextWithHint('##frequencydep',u8(''),departsettings.frequency, sizeof(departsettings.frequency))
 			imgui.PopItemWidth()
 			imgui.NewLine()
 
@@ -6062,7 +6094,7 @@ local imgui_depart = imgui.OnFrame(
 		imgui.BeginChild('##deptext',imgui.ImVec2(480,265),true,imgui.WindowFlags.NoScrollbar)
 			imgui.SetScrollY(imgui.GetScrollMaxY())
 			imgui.TextColoredRGB('История сообщений департамента {808080}(?)',1)
-			imgui.Hint('mytagfind depart','Если в чате департамента будет тэг \''..u8:decode(str(departsettings.myorgname))..'\'\nв этот список добавится это сообщение')
+			imgui.Hint('mytagfind depart','Если в чате департамента будет тэг \''..u8:decode(str(departsettings.myorgname))..'\'\nв этот список добавится это сообщение\nРабота не стабильна')
 			imgui.Separator()
 			for k,v in pairs(dephistory) do
 				imgui.TextWrapped(u8(v))
@@ -6075,10 +6107,10 @@ local imgui_depart = imgui.OnFrame(
 		imgui.SameLine()
 		if imgui.Button(u8'Отправить',imgui.ImVec2(100,24)) then
 			if #str(departsettings.myorgname) > 0 and #str(departsettings.toorgname) > 0 and #str(departsettings.myorgtext) > 0 then
-				if #str(departsettings.frequency) > 0 then
-					sampSendChat(format('/d [%s] - %s - [%s] %s', u8:decode(str(departsettings.myorgname)), gsub(u8:decode(str(departsettings.frequency)), '%.',','),u8:decode(str(departsettings.toorgname)),u8:decode(str(departsettings.myorgtext))))
-				else
+				if #str(departsettings.frequency) == 0 then
 					sampSendChat(format('/d [%s] - [%s] %s', u8:decode(str(departsettings.myorgname)),u8:decode(str(departsettings.toorgname)),u8:decode(str(departsettings.myorgtext))))
+				else
+					sampSendChat(format('/d [%s] - %s - [%s] %s', u8:decode(str(departsettings.myorgname)), gsub(u8:decode(str(departsettings.frequency)), '%.',','),u8:decode(str(departsettings.toorgname)),u8:decode(str(departsettings.myorgtext))))
 				end
 				imgui.StrCopy(departsettings.myorgtext, '')
 			else
@@ -6289,7 +6321,7 @@ local interaction_frame = imgui.OnFrame(
 					sendchatarray(configuration.main_settings.playcd, {
 						{'/me {gender:достал|достала} планшет из кармана'},
 						{'/me {gender:включил|включила} планшет'},
-						{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+						{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 						{'/me {gender:выбрал|выбрала} нужного сотрудника'},
 						{'/me {gender:выбрал|выбрала} пункт \'Отключить рацию сотрудника\''},
 						{'/me {gender:нажал|нажала} на кнопку \'Сохранить изменения\''},
@@ -6298,7 +6330,7 @@ local interaction_frame = imgui.OnFrame(
 				end
 				if imgui.Button(u8'+ WARN', imgui.ImVec2(78, 20)) then
 					local id = data.id
-					local reason = "Н. У."
+					local reason = "НУМЗ"
 					sendchatarray(configuration.main_settings.playcd, {
 						{'/me {gender:достал|достала} планшет из кармана'},
 						{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками\''},
@@ -6322,7 +6354,7 @@ local interaction_frame = imgui.OnFrame(
 				end
 				if imgui.Button(u8'Уволить', imgui.ImVec2(-1, 20)) then
 					local uvalid = data.id
-					local reason = "Н. У."
+					local reason = "НУМЗ"
 					sendchatarray(configuration.main_settings.playcd, {
 						{'/me {gender:достал|достала} планшет из кармана'},
 						{'/me {gender:перешёл|перешла} в раздел \'Увольнение\''},
@@ -6593,7 +6625,7 @@ function sampev.onShowDialog(dialogId, style, title, button1, button2, text)
 	    		local mute = string.find(line, '| MUTED')
 	    		local near = select(1, sampGetCharHandleBySampPlayerId(tonumber(id)))
 	    		local uniform = (color == 'FFFFFF')
-				print(nick,rank)
+				--print(nick,rank)
 	    		checker_variables.online[#checker_variables.online + 1] = { 
 					nickname = tostring(nick),
 					id = id,
@@ -6743,18 +6775,22 @@ function sampev.onSendChat(message)
 			return false
 		end
 	end
-	if find(message, '{location:(%A+)|(%A+)|(%A+)}') then
-		local LS, CF, LV = message:match('{location:(%A+)|(%A+)|(%A+)}')
+	if find(message, '{location:(%A+)|(%A+)|(%A+)|(%A+)}') then
+		local LS, SF, LV, JF = message:match('{location:(%A+)|(%A+)|(%A+)|(%A+)}')
 		if configuration.main_settings.location == 0 then
-			local locationmsg = gsub(message, '{location:%A+|%A+|(%A+}', LS, 1)
+			local locationmsg = gsub(message, '{location:%A+|%A+|%A+|%A+}', LS, 1)
 			sampSendChat(tostring(locationmsg))
 			return false
 		elseif configuration.main_settings.location == 1 then
-			local locationmsg = gsub(message, '{location:%A+|%A+|%A+}', CF, 1)
+			local locationmsg = gsub(message, '{location:%A+|%A+|%A+|%A+}', SF, 1)
+			sampSendChat(tostring(locationmsg))
+			return false
+		elseif configuration.main_settings.location == 2 then
+			local locationmsg = gsub(message, '{location:%A+|%A+|%A+|%A+}', LV, 1)
 			sampSendChat(tostring(locationmsg))
 			return false
 		else
-			local locationmsg = gsub(message, '{location:%A+|%A+|%A+}', LV, 1)
+			local locationmsg = gsub(message, '{location:%A+|%A+|%A+|%A+}', JF, 1)
 			sampSendChat(tostring(locationmsg))
 			return false
 		end
@@ -6830,18 +6866,22 @@ function sampev.onSendCommand(cmd)
 			return false
 		end
 	end
-	if find(cmd, '{location:(%A+)|(%A+)|(%A+)}') then
-		local LS, CF, LV = cmd:match('{location:(%A+)|(%A+)|(%A+)}')
+	if find(cmd, '{location:(%A+)|(%A+)|(%A+)|(%A+)}') then
+		local LS, SF, LV, JF = cmd:match('{location:(%A+)|(%A+)|(%A+)|(%A+)}')
 		if configuration.main_settings.location == 0 then
-			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+}', LS, 1)
+			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+|%A+}', LS, 1)
 			sampSendChat(tostring(locationmsg))
 			return false
 		elseif configuration.main_settings.location == 1 then
-			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+}', CF, 1)
+			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+|%A+}', SF, 1)
+			sampSendChat(tostring(locationmsg))
+			return false
+		elseif configuration.main_settings.location == 2 then
+			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+|%A+}', LV, 1)
 			sampSendChat(tostring(locationmsg))
 			return false
 		else
-			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+}', LV, 1)
+			local locationmsg = gsub(cmd, '{location:%A+|%A+|%A+|%A+}', JF, 1)
 			sampSendChat(tostring(locationmsg))
 			return false
 		end
@@ -6907,7 +6947,7 @@ function MedHelperMessage(text)
 	local r,g,b,a = col.x*255, col.y*255, col.z*255, col.w*255
 	text = gsub(text, '{WC}', '{EBEBEB}')
 	text = gsub(text, '{MC}', format('{%06X}', bit.bor(bit.bor(b, bit.lshift(g, 8)), bit.lshift(r, 16))))
-	sampAddChatMessage(format('[MedHelper]{EBEBEB} %s', text),join_argb(a, r, g, b)) -- ff6633 default
+	sampAddChatMessage(format('[MedHelper]{EBEBEB} %s', text),join_argb(a, r, g, b)) -- ff33f2 default
 end
 
 function onWindowMessage(msg, wparam, lparam)
@@ -6972,10 +7012,10 @@ function onScriptTerminate(script, quitGame)
 			i = i + 1
 		end
 
-		sampShowDialog(536472, '{ff6633}[Med Helper]{ffffff} Скрипт был выгружен сам по себе.', [[
+		sampShowDialog(536472, '{FF33F2}[Med Helper]{ffffff} Скрипт был выгружен сам по себе.', [[
 {f51111}Если Вы самостоятельно перезагрузили скрипт, то можете закрыть это диалоговое окно.
 В ином случае, для начала попытайтесь восстановить работу скрипта сочетанием клавиш CTRL + R.
-Если же это не помогло, то следуйте дальнейшим инструкциям.{ff6633}
+Если же это не помогло, то следуйте дальнейшим инструкциям.{FF33F2}
 1. Возможно у Вас установлены конфликтующие LUA файлы и хелперы, попытайтесь удалить их.
 2. Возможно Вы не доустановили некоторые нужные библиотеки, а именно:
  - SAMPFUNCS 5.5.1
@@ -6985,7 +7025,7 @@ function onScriptTerminate(script, quitGame)
 - В папке moonloader > config > Удаляем файл Med Helper.ini
 - В папке moonloader > Удаляем папку Med Helper
 4. Если ничего из вышеперечисленного не исправило ошибку, то следует установить скрипт на другую сборку.
-5. Если даже это не помогло Вам, то отправьте автору {2594CC}(vk.com/evil.duckky){FF6633} скриншот ошибки.{FFFFFF}
+5. Если даже это не помогло Вам, то отправьте автору {2594CC}(vk.com/evil.duckky){FF33F2} скриншот ошибки.{FFFFFF}
 ———————————————————————————————————————————————————————
 {C0C0C0}]]..moonlog, 'ОК', nil, 0)
 	end
@@ -7123,7 +7163,7 @@ function checkUpdates(json_url, show_notify)
 					local updateversion = (configuration.main_settings.getbetaupd and info.beta_upd) and info.beta_version or info.version
 					f:close()
 					os.remove(json)
-					if updateversion ~= thisScript().version then
+					if updateversion > thisScript().version then
 						addNotify('Обнаружено обновление на\nверсию {MC}'..updateversion..'{WC}. Подробности:\n{MC}/mhmupd', 5)
 					else
 						if show_notify then
@@ -7199,8 +7239,8 @@ function main()
 		windows.imgui_binder[0] = not windows.imgui_binder[0]
 	end)
 	sampRegisterChatCommand('mhmlect', function()
-		if configuration.main_settings.myrankint < 5 then
-			return addNotify('Данная функция доступна с 5-го\nранга.', 5)
+		if configuration.main_settings.myrankint < 3 then
+			return addNotify('Данная функция доступна с 3-го\nранга.', 3)
 		end
 		windows.imgui_lect[0] = not windows.imgui_lect[0]
 	end)
@@ -7409,7 +7449,7 @@ function main()
 		return sendchatarray(configuration.main_settings.playcd, {
 			{'/me {gender:достал|достала} планшет из кармана'},
 			{'/me {gender:включил|включила} планшет'},
-			{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+			{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 			{'/me {gender:выбрал|выбрала} нужного сотрудника'},
 			{'/me {gender:выбрал|выбрала} пункт \'Отключить рацию сотрудника\''},
 			{'/me {gender:нажал|нажала} на кнопку \'Сохранить изменения\''},
@@ -7431,7 +7471,7 @@ function main()
 		return sendchatarray(configuration.main_settings.playcd, {
 			{'/me {gender:достал|достала} планшет из кармана'},
 			{'/me {gender:включил|включила} планшет'},
-			{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас}'},
+			{'/me {gender:перешёл|перешла} в раздел \'Управление сотрудниками %s\'', configuration.main_settings.replaceash and '{location:ЛСМЦ|СФМЦ|ЛВМЦ|ДФМЦ}' or '{location:Больницы Лос-Сантос|Больницы Сан-Фиерро|Больницы Лас-Вентурас|Больницы Ддефферсон}'},
 			{'/me {gender:выбрал|выбрала} нужного сотрудника'},
 			{'/me {gender:выбрал|выбрала} пункт \'Включить рацию сотрудника\''},
 			{'/me {gender:нажал|нажала} на кнопку \'Сохранить изменения\''},
@@ -7454,9 +7494,44 @@ function main()
 			return MedHelperMessage('Игрок находится в АФК!')
 		end
 		return sendchatarray(configuration.main_settings.playcd, {
-			{'/me {gender:схватил|схватила} человека за руку, и {gender:повел|повела} к выходу'},
+			{'/me {gender:схватил|схватила} человека за руку и {gender:повел|повела} к выходу'},
 			{'/me открыв дверь рукой, {gender:вывел|вывела} человека на улицу'},
 			{'/expel %s %s',id,reason},
+		})
+	end)
+
+	sampRegisterChatCommand('heal', function(param)
+		if sampIsPlayerPaused(id) then
+			return MedHelperMessage('Игрок находится в АФК!')
+		end
+		return sendchatarray(configuration.main_settings.playcd, {
+			{'/me нырнув правой рукой в карман, {gender:вытянул|вытянула} оттуда блокнот и ручку'},
+			{'/todo Так-так, хорошо, не волнуйтесь*записав все сказанное человеком напротив'},
+			{'/me движением правой руки {gender:открыл|открыла} мед.кейс'},
+			{'/me несколькими движениями рук {gender:нашел|нашла} нужное лекарство в мед.чемодане'},
+			{'/do Лекарство в правой руке.'},
+			{'/me аккуратным движением руки {gender:передал|передала} лекарство пациенту'},
+			{'Принимайте эти таблетки, и через некоторое время вам станет лучше.'},
+			{'/heal %s %s',param,configuration.main_settings.heal},
+		})
+	end)
+
+	sampRegisterChatCommand('cure', function(param)
+		if sampIsPlayerPaused(id) then
+			return MedHelperMessage('Игрок находится в АФК!')
+		end
+		if configuration.main_settings.myrankint < 5 then
+			return MedHelperMessage('Данная команда доступна с 5-го ранга.')
+		end
+		return sendchatarray(configuration.main_settings.playcd, {
+			{'/todo Что-то ему вообще не хорошо*снимая медицинскую сумку с плеча'},
+			{'/me ставит медицинскую сумку возле пострадавшего'},
+			{'/do Мед. сумка на земле.'},
+			{'/me наклоняется над телом, затем прощупывает пульс на сонной артерии'},
+			{'/do Пульс слабый.'},
+			{'/me начинает непрямой массаж сердца, время от времени проверяя пульс'},
+			{'/do Сердце пациента начало биться.'},
+			{'/cure %s',param},
 		})
 	end)
 
@@ -7510,7 +7585,7 @@ function main()
 						if #reason > 0 then
 							if not sampIsPlayerPaused(id) then
 								sendchatarray(configuration.main_settings.playcd, {
-									{'/me {gender:схватил|схватила} человека за руку, и {gender:повел|повела} к выходу'},
+									{'/me {gender:схватил|схватила} человека за руку и {gender:повел|повела} к выходу'},
 									{'/me открыв дверь рукой, {gender:вывел|вывела} человека на улицу'},
 									{'/expel %s %s',id,reason},
 								})
@@ -7656,7 +7731,7 @@ function main()
                 for id = 0, 2047 do
                     if sampIs3dTextDefined(id) then
                         local text, _, x, y, z, _, _, _, _ = sampGet3dTextInfoById(id)
-                        if string.match(text, "^{%x+}Открыть\n{%x+}H$") or string.match(text, "^{%x+}Открыть\n\n{%x+}H$") then
+                        if string.match(text, "Открыть") then
                             if getDistanceBetweenCoords2d(pX, pY, x, y) <= 1 then
                                 sampSendChat("/opengate")
                                 opengate_timer = os.clock()
@@ -7693,6 +7768,22 @@ changelog = {
  - Доработки процесса выдачи мед.карты]]
 			},
 		},
+		
+		{
+			version = '1.2',
+			date = '20.09.2023',
+			text = {
+				'Меню мед.осмотра',
+				'Быстрое лечение через команду /heal',
+				'Быстрая реанимация через команду /cure',
+			},
+			patches = {
+				active = false,
+				text = [[
+ - Убрана система вакцинации от коронавируса]]
+			},
+		},
+		
 	},
 }
 
